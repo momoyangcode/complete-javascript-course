@@ -9,17 +9,17 @@ const overLay = document.querySelector('.overlay');
 //Function-- open hidden modal
 const openModal = function () {
   modal.classList.remove('hidden');
-  overlay.classList.remove('hidden');
+  overLay.classList.remove('hidden');
 };
 
 //Function-- close modal
 const closeModal = function () {
   modal.classList.add('hidden');
-  overlay.classList.add('hidden');
+  overLay.classList.add('hidden');
 };
 
 //Open Modal-- click show modal button
-for (i = 0; i < showModalBtn.length; i++) {
+for (let i = 0; i < showModalBtn.length; i++) {
   showModalBtn[i].addEventListener('click', openModal);
 }
 
