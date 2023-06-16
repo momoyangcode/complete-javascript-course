@@ -251,16 +251,87 @@
 // };
 // runOnce();
 
-(function () {
-  console.log('This will only run once');
-  const isPrivate = 23;
-})();
+// (function () {
+//   console.log('This will only run once');
+//   const isPrivate = 23;
+// })();
 
-// console.log(isPrivate);
+// // console.log(isPrivate);
 
-(() => console.log('This will ALSO only run once'))();
+// (() => console.log('This will ALSO only run once'))();
 
-//    {} more often used to hide varaiables in the scope---Data Privacy
-{
-  const isPrivate = 23;
-}
+// //    {} more often used to hide varaiables in the scope---Data Privacy
+// {
+//   const isPrivate = 23;
+// }
+
+//-----Closures-----//
+
+// const secureBooking = function () {
+//   let passengerCount = 0;
+
+//   return function () {
+//     passengerCount++;
+//     console.log(`${passengerCount} passengers`);
+//   };
+// };
+
+// const booker = secureBooking();
+// booker();
+// booker();
+// booker();
+
+// console.dir(booker);
+
+// //-----More Closures Examples-----//
+// let f;
+
+// const g = function () {
+//   const a = 23;
+
+//   f = function () {
+//     console.log(a * 2);
+//   };
+// };
+
+// g();
+// f();
+
+// // Reassign f function
+
+// const h = function () {
+//   const b = 8;
+//   f = function () {
+//     console.log(b * 2);
+//   };
+// };
+// h();
+// f();
+
+// console.dir(f);
+
+// //Example 2
+
+// const boardPassengers = function (n, wait) {
+//   const perGroup = n / 3;
+
+//   setTimeout(function () {
+//     console.log(`We are now boarding all ${n} passengers`);
+//     console.log(`There are 3 groups, each with ${perGroup} passengers`);
+//   }, wait * 1000);
+
+//   console.log(`Will start boarding in ${wait} seconds`);
+// };
+
+// boardPassengers(180, 3);
+
+//-----Coding Challenge #2-----//
+
+// (function () {
+//   const header = document.querySelector('h1');
+//   header.style.color = 'red';
+
+//   document.body.addEventListener('click', function () {
+//     header.style.color = 'blue';
+//   });
+// })();
