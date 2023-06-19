@@ -75,27 +75,25 @@ const addNewUserName = function (accs) {
 };
 addNewUserName(accounts);
 
-const displayBalance = function (movements) {
-  const balance = movements.reduce((acc, mov) => acc + mov, 0);
-  labelBalance.textContent = `${balance} € `;
+const displayBalance = function (acc) {
+  acc.balance = acc.movements.reduce((acc, mov) => acc + mov, 0);
+  labelBalance.textContent = `${acc.balance} € `;
 };
 
-displayBalance(account1.movements);
-
-const displaySummary = function (movements) {
-  const totalIncome = movements
+const displaySummary = function (acc) {
+  const totalIncome = acc.movements
     .filter(mov => mov > 0)
     .reduce((acc, deposit) => acc + deposit, 0);
   labelSumIn.textContent = `${totalIncome}€`;
 
-  const totalOutcome = movements
+  const totalOutcome = acc.movements
     .filter(mov => mov < 0)
     .reduce((acc, withdrawal) => acc + withdrawal, 0);
   labelSumOut.textContent = `${Math.abs(totalOutcome)}€`;
 
-  const interest = movements
+  const interest = acc.movements
     .filter(mov => mov > 0)
-    .map(deposit => (deposit * 1.2) / 100)
+    .map(deposit => (deposit * acc.interestRate) / 100)
     .filter((int, i, arr) => {
       // console.log(arr);
       return int >= 1;
@@ -105,13 +103,13 @@ const displaySummary = function (movements) {
   labelSumInterest.textContent = `${interest}€`;
 };
 
-displaySummary(account1.movements);
-
 ////////------Creating DOM Element-----/////////
 
-const displayMovements = function (movements) {
+const displayMovements = function (movements, sort = false) {
   containerMovements.innerHTML = '';
-  movements.forEach(function (mov, i) {
+
+  const movs = sort ? movements.slice().sort((a, b) => a - b) : movements;
+  movs.forEach(function (mov, i) {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
     const html = `<div class="movements__row">
                     <div class="movements__type movements__type--${type}">${
@@ -123,7 +121,107 @@ const displayMovements = function (movements) {
   });
 };
 
-displayMovements(account1.movements);
+const updateUI = function (acc) {
+  //Display movements
+  displayMovements(acc.movements);
+
+  //Display balance
+  displayBalance(acc);
+
+  //Display summary
+  displaySummary(acc);
+};
+//////----Implementing Login-----////
+let currentAccount;
+
+btnLogin.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  currentAccount = accounts.find(
+    acc => acc.userName === inputLoginUsername.value
+  );
+
+  if (currentAccount?.pin === Number(inputLoginPin.value)) {
+    //Clear Input area
+    inputLoginUsername.value = inputLoginPin.value = '';
+    inputLoginPin.blur();
+
+    // Display UI(user-interface) and message
+    labelWelcome.textContent = `Welcome Back, ${
+      currentAccount.owner.split(' ')[0]
+    }`;
+    containerApp.style.opacity = 1;
+
+    updateUI(currentAccount);
+  }
+});
+
+//////----Implementing Transfers-----////
+
+btnTransfer.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  const amount = Number(inputTransferAmount.value);
+  const receieveAcc = accounts.find(
+    acc => acc.userName === inputTransferTo.value
+  );
+
+  inputTransferAmount.value = inputTransferTo.value = '';
+
+  if (
+    amount > 0 &&
+    receieveAcc &&
+    currentAccount.balance >= amount &&
+    receieveAcc.userName !== currentAccount.userName
+  ) {
+    currentAccount.movements.push(-amount);
+    receieveAcc.movements.push(amount);
+    updateUI(currentAccount);
+  }
+});
+
+//////----The some Method-----////
+
+btnLoan.addEventListener('click', function (e) {
+  e.preventDefault();
+  const amount = Number(inputLoanAmount.value);
+
+  if (amount > 0 && currentAccount.movements.some(mov => mov >= amount * 0.1)) {
+    //Add Movement
+    currentAccount.movements.push(amount);
+
+    //Update UI
+    updateUI(currentAccount);
+
+    inputLoanAmount.value = '';
+  }
+});
+
+btnClose.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  if (
+    inputCloseUsername.value === currentAccount.userName &&
+    Number(inputClosePin.value) === currentAccount.pin
+  ) {
+    const index = accounts.findIndex(
+      acc => acc.userName === currentAccount.userName
+    );
+    //Delete Account
+    accounts.splice(index, 1);
+    //Hide UI
+    containerApp.style.opacity = 0;
+  }
+  inputCloseUsername.value = inputClosePin.value = '';
+});
+
+let sorted = false;
+btnSort.addEventListener('click', function (e) {
+  e.preventDefault();
+  displayMovements(currentAccount.movements, !sorted);
+  sorted = !sorted;
+});
+
 /////////////////////////////////////////////////
 ////////------Simple Array Methods-----/////////
 
@@ -427,5 +525,259 @@ displayMovements(account1.movements);
 //   if (acc.owner === 'Jessica Davis') console.log(acc);
 // }
 
-//////////////////////////////////////
-//////----Implementing Login-----////
+/////////////////////////////////////////////////
+////////------some and every-----/////////
+// const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
+
+// //EQUALITY
+// console.log(movements.includes(-130));
+
+// //CONTION
+// console.log(movements.some(mov => mov === -130));
+
+// const anyDeposit = movements.some(mov => mov > 0);
+// console.log(anyDeposit);
+
+// //////----The every Method-----////
+
+// console.log(movements.every(mov => mov > 0));
+// console.log(account4.movements.every(mov => mov > 0));
+
+// //Separate callback
+// const deposit = mov => mov > 0;
+// console.log(movements.some(deposit));
+// console.log(movements.every(deposit));
+// console.log(movements.filter(deposit));
+
+/////////////////////////////////////////////
+////////------flat and flatMap-----/////////
+
+//for Nested Array
+
+// const arr = [[1, 2, 3], [4, 5, 6], 7, 8];
+// console.log(arr.flat());
+
+// const arrDeep = [[1, [2, 3]], [4, [5, 6]], 7, 8];
+// console.log(arrDeep.flat(2));
+
+// const accountMovements = accounts.map(acc => acc.movements);
+// console.log(accountMovements);
+// const allMovements = accountMovements.flat();
+// const overallBalance = allMovements.reduce((acc, mov) => acc + mov, 0);
+
+// Use Chainning to simplify
+// const overallBalance = accounts
+//   .map(acc => acc.movements)
+//   .flat()
+//   .reduce((acc, mov) => acc + mov, 0);
+
+// console.log(overallBalance);
+
+// //////----flatMap(only goes ONE level deep)-----////
+
+// const overallBalance2 = accounts
+//   .flatMap(acc => acc.movements)
+//   .reduce((acc, mov) => acc + mov, 0);
+
+// console.log(overallBalance);
+
+/////////////////////////////////////////////
+////////------Sorting Array-----/////////////
+
+//String (it mutate the array)
+// const owners = ['Jonas', 'Zach', 'Adam', 'Matha'];
+// console.log(owners.sort());
+// console.log(owners);
+
+//Numbers
+
+// const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
+
+//return < 0, A, B
+//return > 0, B, A
+
+//////----Ascending-----////
+// movements.sort((a, b) => {
+//   if (a > b) return 1;
+//   if (a < b) return -1;
+// });
+// movements.sort((a, b) => a - b);
+
+//////----Descending-----////
+// movements.sort((a, b) => b - a);
+// console.log(movements);
+
+///////////////////////////////////////////////////////
+////////------More Ways of Creating and Filling Arrays-----/////////////
+
+// const arr1 = [1, 2, 3, 4, 5, 6, 7];
+// const arr2 = new Array(1, 2, 3, 4, 5, 6, 7);
+// console.log(arr1, arr2);
+
+// const x = new Array(7);
+// console.log(x);
+
+//////----The fill Method-----////
+//fill(value, start, end-nocount)//it mutate the array
+// x.fill(1);
+// console.log(x);
+
+// x.fill(2, 3, 5);
+// console.log(x);
+
+//////----Array.from-----////
+
+// const y = Array.from({ length: 7 }, () => 1);
+// console.log(y);
+
+// const z = Array.from({ length: 7 }, (_, i) => i + 1);
+// console.log(z);
+
+// labelBalance.addEventListener('click', function () {
+//   const movementsUI = Array.from(
+//     document.querySelectorAll('.movements__value'),
+//     el => Number(el.textContent.replace('€', ''))
+//   );
+//   console.log(movementsUI);
+
+// const arr = movementsUI.map(el => Number(el.textContent.replace('€', '')));
+// console.log(arr);
+
+//////----Another way to create an array from documents.querySelectorAll-----////
+// const movementsUI2 = [...document.querySelectorAll('.movements__value')];
+// console.log(movementsUI2);
+// });
+
+///////////////////////////////////////////////////////
+////////------Array Methods Practice-----/////////////
+
+// //1.
+// const bankDepositsSum = accounts
+//   .flatMap(acc => acc.movements)
+//   //.flat()
+//   .filter(mov => mov > 0)
+//   .reduce((sum, mov) => sum + mov, 0);
+
+// console.log(bankDepositsSum);
+
+// //2.
+// // const numDeposits1000 = accounts
+// //   .flatMap(acc => acc.movements)
+// //   .filter(mov => mov >= 1000).length;
+
+// const numDeposits1000 = accounts
+//   .flatMap(acc => acc.movements)
+//   // .reduce((count, mov) => (mov >= 1000 ? count + 1 : count))
+//   .reduce((count, mov) => (mov >= 1000 ? ++count : count), 0);
+
+// console.log(numDeposits1000);
+
+// // Prefixed ++ operator
+
+// let a = 10;
+// // console.log(a++);
+// console.log(++a);
+// a = a++;
+// console.log(a);
+
+// //3.
+// const sum = accounts
+//   .flatMap(acc => acc.movements)
+//   .reduce(
+//     (sum, cur) => {
+//       // cur > 0 ? (sum.deposit += cur) : (sum.withdrawal += cur);
+//       sum[cur > 0 ? 'deposit' : 'withdrawal'] += cur;
+//       return sum;
+//     },
+//     {
+//       deposit: 0,
+//       withdrawal: 0,
+//     }
+//   );
+
+// console.log(sum);
+
+// //4
+// //this is a nice title -> This Is a Nice Title
+
+// const convertTitleCase = function (title) {
+//   const capitalize = str => str[0].toUpperCase() + str.slice(1);
+
+//   const exceptions = ['a', 'an', 'but', 'and', 'the', 'or', 'on', 'in', 'with'];
+
+//   const convertedTitle = title
+//     .toLowerCase()
+//     .split(' ')
+//     .map(word => (exceptions.includes(word) ? word : capitalize(word)))
+//     .join(' ');
+
+//   console.log(capitalize(convertedTitle));
+// };
+
+// convertTitleCase('this is a nice title');
+// convertTitleCase('this is a LONG titlebut not too long');
+// convertTitleCase('and here is another title with an EXAMPLE');
+
+//////////////////////////////////////////////////
+////////-----Coding Challenge #4-----/////////////
+
+// const dogs = [
+//   { weight: 22, curFood: 250, owners: ['Alice', 'Bob'] },
+//   { weight: 8, curFood: 200, owners: ['Matilda'] },
+//   { weight: 13, curFood: 275, owners: ['Sarah', 'John'] },
+//   { weight: 32, curFood: 340, owners: ['Michael'] },
+// ];
+
+// dogs.forEach(dog => (dog.recFood = Math.trunc(dog.weight ** 0.75 * 28)));
+
+// console.log(dogs);
+
+// const sarahDog = dogs.find(dog => dog.owners.includes('Sarah'));
+// if (sarahDog.curFood < sarahDog.recFood * 0.9) {
+//   console.log('it eats too little');
+// } else if (sarahDog.curFood > sarahDog.recFood * 1.1) {
+//   console.log('It eats too much');
+// } else {
+//   console.log('it eats okay amount');
+// }
+
+// const ownersEatTooMuch = dogs
+//   .filter(dog => dog.curFood > dog.recFood * 1.1)
+//   .flatMap(dog => dog.owners);
+// console.log(`${ownersEatTooMuch.join(' and ')}'s dogs eat too much!`);
+
+// const ownersEatTooLittle = dogs
+//   .filter(dog => dog.curFood < dog.recFood * 0.9)
+//   .flatMap(dog => dog.owners);
+// console.log(`${ownersEatTooLittle.join(' and ')}'s dogs eat too little!`);
+
+// const owners = dogs.reduce(
+//   (owners, dog) => {
+//     if (dog.curFood < dog.recFood * 0.9) {
+//       owners.ownersEatTooLittle.push(...dog.owners);
+//     } else if (dog.curFood > dog.recFood * 1.1) {
+//       owners.ownersEatTooMuch.push(...dog.owners);
+//     }
+//     return owners;
+//   },
+//   { ownersEatTooLittle: [], ownersEatTooMuch: [] }
+// );
+// console.log(owners);
+
+// console.log(dogs.some(dog => dog.curFood === dog.recFood));
+
+// console.log(
+//   dogs.some(
+//     dog => dog.curFood >= dog.recFood * 0.9 && dog.curFood <= dog.recFood * 1.1
+//   )
+// );
+
+// console.log(
+//   dogs.filter(
+//     dog => dog.curFood >= dog.recFood * 0.9 && dog.curFood <= dog.recFood * 1.1
+//   )
+// );
+
+// const dogsCopy = dogs.slice().sort((a, b) => a.recFood - b.recFood);
+
+// console.log(dogsCopy);
