@@ -3,8 +3,10 @@
 //Selecting Elements
 const message = document.createElement('div');
 const header = document.querySelector('.header');
+const nav = document.querySelector('.nav');
 const btnScrollTo = document.querySelector('.btn--scroll-to');
 
+const allSections = document.querySelectorAll('.section');
 const section1 = document.getElementById('section--1');
 const modal = document.querySelector('.modal');
 const overlay = document.querySelector('.overlay');
@@ -15,7 +17,25 @@ const tabs = document.querySelectorAll('.operations__tab');
 const tabContainer = document.querySelector('.operations__tab-container');
 const tabsContent = document.querySelectorAll('.operations__content');
 
-//////////12
+/////////////////////////////
+// Sticky Navigation: Intersection Observer API
+const stickyNav = function (entries) {
+  const [entry] = entries;
+  if (!entry.isIntersecting) nav.classList.add('sticky');
+  else nav.classList.remove('sticky');
+};
+
+const navHeight = nav.getBoundingClientRect().height;
+// console.log(navHeight);
+
+const obeserver = new IntersectionObserver(stickyNav, {
+  root: null,
+  threshold: 0,
+  //add a +/- margin that the observer element height will increase/ decrease
+  rootMargin: `-${navHeight}px`, //unit can be only "px", and be careful with "-" or "+"
+});
+obeserver.observe(header);
+
 /////////////////////////////
 // Modal window
 
@@ -70,6 +90,28 @@ btnScrollTo.addEventListener('click', function (e) {
   section1.scrollIntoView({ behavior: 'smooth' });
 });
 
+//////////////////////////////////////////////
+//Reveal section
+
+//Reveal Section function
+const revealSection = function (entries, observer) {
+  const [entry] = entries;
+  console.log(entry);
+  if (!entry.isIntersecting) return;
+
+  entry.target.classList.remove('section--hidden');
+  observer.unobserve(entry.target);
+};
+
+const secObserver = new IntersectionObserver(revealSection, {
+  root: null,
+  threshold: 0.15,
+});
+
+allSections.forEach(section => {
+  section.classList.add('section--hidden');
+  secObserver.observe(section);
+});
 //////////////////////////////////////////////
 //Page Navigation
 
@@ -127,7 +169,6 @@ tabContainer.addEventListener('click', function (e) {
 
 //////////////////////////////////////////////
 //Menu fading animation
-const nav = document.querySelector('.nav');
 
 const handleHover = function (e) {
   //Matching
@@ -460,3 +501,31 @@ console.log(h1.parentElement.children);
 //////////////////////////////////////////////////////
 /////----Passing Arguments to Event Handlers-----/////
 //line 149
+
+//////////////////////////////////////////////
+/////----Implementing a Sticky Navigation: The Scroll Event -----/////
+//Not a great way for sticky navigation:
+/* 
+const section1Coords = section1.getBoundingClientRect();
+
+window.addEventListener('scroll', function () {
+  if (this.window.scrollY > section1Coords.top) nav.classList.add('sticky');
+  else nav.classList.remove('sticky');
+}); */
+
+//////////////////////////////////////////////
+/////----A Better Way: The Intersection Observer API-----/////
+/* const obsCallback = function (entries, observer) {
+  entries.forEach(entry => console.log(entry));
+};
+const obsOption = {
+  root: null, //set "null"--whole viewpoint
+  threshold: [0, 0.2, 1],
+};
+
+const observer = new IntersectionObserver(obsCallback, obsOption);
+observer.observe(section1); */
+//line 19 practice
+
+//////////////////////////////////////////////
+/////----Revealing Elements on scroll-----////
